@@ -1492,22 +1492,33 @@ function toFlow(node) {
 }
 
 /** 대화는 기본으로 가장 최근(맨 아래)을 따라간다. 위로 올려 읽으면 화살표 버튼으로 돌아온다. */
-let logStick = true, followScheduled = false;
-const logJump = $("#logJump");
+let logStick = true, followScheduled = false, dragScroll = false, touchY = null;
+const logJump = $("#logJump"), logBox = $("#log");
 function isLogAtBottom() {
-  const log = $("#log");
-  return log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+  return logBox.scrollHeight - logBox.scrollTop - logBox.clientHeight < 80;
 }
 function followLog(force = false) {
   if (force) logStick = true;
-  if (logStick) $("#log").scrollTop = $("#log").scrollHeight;
+  if (logStick) logBox.scrollTop = logBox.scrollHeight;
   syncLogJump();
 }
 function syncLogJump() {
-  const log = $("#log");
-  logJump.hidden = logStick || log.scrollHeight <= log.clientHeight + 4;
+  logJump.hidden = logStick || logBox.scrollHeight <= logBox.clientHeight + 4;
 }
-$("#log").addEventListener("scroll", () => { logStick = isLogAtBottom(); syncLogJump(); });
+// 이어 보기는 사용자가 직접 위로 올릴 때만 끈다. 설명이 차오르는 자동 이동(스크롤 앵커 조정 포함)은 흔들지 않는다.
+logBox.addEventListener("wheel", (e) => { if (e.deltaY < 0) { logStick = false; syncLogJump(); } }, { passive: true });
+logBox.addEventListener("touchstart", (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+logBox.addEventListener("touchmove", (e) => {
+  if (touchY !== null && e.touches[0].clientY > touchY) { logStick = false; syncLogJump(); }
+  touchY = e.touches[0].clientY;
+}, { passive: true });
+logBox.addEventListener("pointerdown", (e) => { dragScroll = e.clientX > logBox.getBoundingClientRect().right - 16; });
+window.addEventListener("pointerup", () => { dragScroll = false; });
+logBox.addEventListener("scroll", () => {
+  if (isLogAtBottom()) logStick = true;
+  else if (dragScroll) logStick = false;
+  syncLogJump();
+});
 logJump.addEventListener("click", () => followLog(true));
 // Markdown 이 비동기로 차오를 때도 맨 아래를 따라 간다. 읽던 위치를 지킨 사용자는 건드리지 않는다.
 const logFollow = new MutationObserver(() => {
