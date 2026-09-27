@@ -5,7 +5,7 @@ Status: Accepted
 
 ## Context
 
-videcoder-docent는 바이브코더 세션에 붙는 설명 전용 서브에이전트다. 어느 호스트 에이전트에 붙을지(omp, Claude Code, Hermes)가 정해지지 않았고, 호스트에 따라 언어·전사 접근 방식이 완전히 달라진다.
+vibecoder-docent는 바이브코더 세션에 붙는 설명 전용 서브에이전트다. 어느 호스트 에이전트에 붙을지(omp, Claude Code, Hermes)가 정해지지 않았고, 호스트에 따라 언어·전사 접근 방식이 완전히 달라진다.
 
 ## Decision
 

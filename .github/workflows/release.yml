@@ -47,7 +47,7 @@ jobs:
       - name: Pack release archives
         run: |
           npm pack
-          cp "$RELEASE_ARCHIVE" videcoder-docent.tgz
+          cp "$RELEASE_ARCHIVE" vibecoder-docent.tgz
       - name: Publish or replace release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,8 +55,8 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "$RELEASE_ARCHIVE" videcoder-docent.tgz --clobber
+            gh release upload "$RELEASE_TAG" "$RELEASE_ARCHIVE" vibecoder-docent.tgz --clobber
           else
-            gh release create "$RELEASE_TAG" "$RELEASE_ARCHIVE" videcoder-docent.tgz \
+            gh release create "$RELEASE_TAG" "$RELEASE_ARCHIVE" vibecoder-docent.tgz \
               --verify-tag --title "$RELEASE_TAG" --notes-file release-notes.md
           fi

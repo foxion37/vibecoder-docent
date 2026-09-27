@@ -2,6 +2,11 @@
 
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/). 버전은 [SemVer](https://semver.org/lang/ko/). 0.x 동안은 minor 가 새 기능, patch 가 고침.
 
+## [0.16.21] — 2026-09-28
+
+### 변경
+- 프로젝트 이름의 오타를 바로잡음: `videcoder-docent` → `vibecoder-docent`. npm 패키지 이름, GitHub 저장소 이름(저장소 주인이 웹에서 변경, 옛 주소는 자동 넘겨주기), Release 자산 고정 이름(`vibecoder-docent.tgz`), 서브에이전트 파일 이름, 문서의 설치 URL. `docent` 실행 명령과 `~/.docent` 데이터 폴더는 그대로. 기기 업데이트 시 옛 전역 패키지(`videcoder-docent`)를 지우고 새 tgz를 설치 (ADR 0036).
+
 ## [0.16.20] — 2026-09-26
 
 ### 고침
@@ -197,7 +202,7 @@
 첫 공개 준비 릴리스.
 
 ### 추가
-- GitHub Actions: main push·PR마다 빌드 산출물 일치·테스트·패키징 확인(CI), `v*` 태그 시 Release에 `videcoder-docent-<version>.tgz`와 `videcoder-docent.tgz` 첨부 (ADR 0027).
+- GitHub Actions: main push·PR마다 빌드 산출물 일치·테스트·패키징 확인(CI), `v*` 태그 시 Release에 `vibecoder-docent-<version>.tgz`와 `vibecoder-docent.tgz` 첨부 (ADR 0027).
 - `LICENSE`(MIT), `THIRD_PARTY_NOTICES.md`(번들 코드와 Pretendard 글꼴 라이선스), `SECURITY.md`, `CONTRIBUTING.md`, 이슈·PR 템플릿.
 - 공개용 README: 브랜드 썸네일, 가짜 데이터로 만든 화면 예시, 설치·실행·다른 컴퓨터·데이터와 개인정보 안내.
 
@@ -426,7 +431,7 @@
 
 코어 프롬프트(4슬롯, 6유형), 로컬 웹앱, omp·Claude Code 세션 목록, 라이브 따라가기, 문답 기억, Jev 판정, `docent` CLI, 평가 3전사×5문 통과.
 
-[0.3.0]: https://github.com/foxion37/videcoder-docent/compare/v0.2.1...v0.3.0
-[0.2.1]: https://github.com/foxion37/videcoder-docent/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/foxion37/videcoder-docent/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/foxion37/videcoder-docent/releases/tag/v0.1.1
+[0.3.0]: https://github.com/foxion37/vibecoder-docent/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/foxion37/vibecoder-docent/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/foxion37/vibecoder-docent/compare/v0.1.1...v0.2.0
+[0.1.1]: https://github.com/foxion37/vibecoder-docent/releases/tag/v0.1.1

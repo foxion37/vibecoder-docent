@@ -8,3 +8,6 @@ data/
 node_modules/
 .venv/
 __pycache__/
+
+.mimosa/
+.video_agent/

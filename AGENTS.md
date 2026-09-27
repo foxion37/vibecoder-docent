@@ -1,4 +1,4 @@
-# AGENTS.md - videcoder-docent
+# AGENTS.md - vibecoder-docent
 
 ## 프로젝트 핵심
 
@@ -20,7 +20,7 @@
 
 - `AGENTS.md` 는 300줄 미만. 상세 규칙은 문서로 분리.
 - 비밀값은 파일에 쓰지 않는다.
-- 공개 저장소 `origin`(foxion37/videcoder-docent) 의 `main` 이 정본이다. 변경은 CHANGELOG·버전 갱신 → noreply 작성자로 커밋 → `main` 푸시 → `v<버전>` 태그 푸시 순서. 태그가 GitHub Release tgz 를 만든다. `archive` 원격(옛 비공개 히스토리)에는 푸시하지 않는다.
+- 공개 저장소 `origin`(foxion37/vibecoder-docent) 의 `main` 이 정본이다. 변경은 CHANGELOG·버전 갱신 → noreply 작성자로 커밋 → `main` 푸시 → `v<버전>` 태그 푸시 순서. 태그가 GitHub Release tgz 를 만든다. `archive` 원격(옛 비공개 히스토리)에는 푸시하지 않는다.
 
 ## 빠른 링크
 
@@ -56,3 +56,4 @@
 - @docs/decisions/0033-card-output-as-first-message.md
 - @docs/decisions/0034-host-toggle-in-settings.md
 - @docs/decisions/0035-settings-tabs-and-content-size.md
+- @docs/decisions/0036-rename-vibecoder.md

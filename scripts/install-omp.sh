@@ -8,5 +8,5 @@ case "${1:-}" in
   *) echo "usage: $0 [--project]" >&2; exit 2 ;;
 esac
 mkdir -p "$dest"
-cat "$root/adapters/omp/frontmatter.md" "$root/prompt/docent.md" > "$dest/videcoder-docent.md"
-echo "installed: $dest/videcoder-docent.md"
+cat "$root/adapters/omp/frontmatter.md" "$root/prompt/docent.md" > "$dest/vibecoder-docent.md"
+echo "installed: $dest/vibecoder-docent.md"

@@ -3,8 +3,8 @@
 ## 설치
 
 ```sh
-scripts/install-omp.sh            # → ~/.omp/agent/agents/videcoder-docent.md
-scripts/install-omp.sh --project  # → ./.omp/agents/videcoder-docent.md (현재 폴더에서만)
+scripts/install-omp.sh            # → ~/.omp/agent/agents/vibecoder-docent.md
+scripts/install-omp.sh --project  # → ./.omp/agents/vibecoder-docent.md (현재 폴더에서만)
 ```
 
 `frontmatter.md` + `../../prompt/docent.md` 를 이어 붙인다. 코어를 고치면 다시 실행.
@@ -17,7 +17,7 @@ scripts/install-omp.sh --project  # → ./.omp/agents/videcoder-docent.md (현�
 {
   "context": "바이브코더가 도슨트에게 묻는다.",
   "tasks": [{
-    "agent": "videcoder-docent",
+    "agent": "vibecoder-docent",
     "task": "전사: history://Main\n질문: 지금 뭐 한 거야?"
   }]
 }

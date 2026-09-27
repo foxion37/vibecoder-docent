@@ -35,7 +35,7 @@ docs/                     개념·범위·결정
 | | 웹앱 (ADR 0005, 기본) | 서브에이전트 (ADR 0002, 배관) |
 | --- | --- | --- |
 | 사용자 | 브라우저에서 직접 | 메인 에이전트에게 부탁 |
-| 코어 전달 | `--system-prompt prompt/docent.md` | 설치된 agents/videcoder-docent.md |
+| 코어 전달 | `--system-prompt prompt/docent.md` | 설치된 agents/vibecoder-docent.md |
 | 전사 | 서버가 jsonl 정규화해 대화 입력으로 (처음 한 번 + 이후 새 기록) | `history://<id>` 또는 정규화한 md 경로 |
 | 출력 | 평문 → `slots.mjs` → 카드 | `{"answer": 평문}` |
 | 도구 제한 | 설명은 `--tools read`, 분류는 도구 없음 (runner.mjs) | 프론트매터 `tools:` |

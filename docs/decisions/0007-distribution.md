@@ -11,7 +11,7 @@ Status: Accepted (배포 채널 공개 여부는 미정)
 
 1. **실행은 `docent` 한 명령.** `bin/docent.mjs`: 이미 켜져 있으면 브라우저만 열고, 아니면 서버를 띄우고 브라우저를 연다. `--no-open`, `--port`. omp 가 없으면 설치 안내 후 종료.
 2. **문답 기억은 `~/.docent/questions.jsonl`** (`DOCENT_HOME` 으로 변경). 패키지 폴더 안에 쓰지 않는다 — 전역 설치 시 `node_modules` 에 데이터가 남는 것을 막는다.
-3. **배포 단위는 npm 패키지 `videcoder-docent`.** `bin: docent`, `files` 로 `bin app prompt scripts adapters` 만, 의존성 0, `engines.node >= 22`. 설치: `npm i -g videcoder-docent` 또는 `npm i -g github:<owner>/videcoder-docent`.
+3. **배포 단위는 npm 패키지 `vibecoder-docent`.** `bin: docent`, `files` 로 `bin app prompt scripts adapters` 만, 의존성 0, `engines.node >= 22`. 설치: `npm i -g vibecoder-docent` 또는 `npm i -g github:<owner>/vibecoder-docent`. 처음 이름은 `videcoder-docent`였다가 0036 에서 오타를 바로잡았다.
 4. **전제 조건은 둘: Node 22+, omp 설치·로그인.** 없는 사람을 위한 Anthropic API 직접 호출은 만들지 않는다(ADR 0005 유지). 수요가 확인되면 별도 ADR.
 5. **omp 확장(마켓플레이스)은 npm 패키지 위의 얇은 껍데기**로 나중에. `/docent` 슬래시 명령이 `docent` CLI 를 부르는 정도.
 6. 상시 실행(LaunchAgent)은 만들지 않는다. 필요할 때 `docent` 를 치는 것으로 충분하다. 상시 실행이 필요하면 사용자가 자기 환경의 서비스 관리자로 등록한다.
