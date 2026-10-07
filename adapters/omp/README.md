@@ -3,11 +3,15 @@
 ## 설치
 
 ```sh
-scripts/install-omp.sh            # → ~/.omp/agent/agents/vibecoder-docent.md
-scripts/install-omp.sh --project  # → ./.omp/agents/vibecoder-docent.md (현재 폴더에서만)
+scripts/install-omp.sh            # → ~/.omp/agent/agents/vibecoder-docent.md, ~/.omp/agent/extensions/vibecoder-docent-command.ts
+scripts/install-omp.sh --project  # → ./.omp/agents/, ./.omp/extensions/ (현재 폴더에서만)
 ```
 
-`frontmatter.md` + `../../prompt/docent.md` 를 이어 붙인다. 코어를 고치면 다시 실행.
+`frontmatter.md` + `../../prompt/docent.md` 를 이어 붙이고, `docent-command.ts` 확장을 복사한다. 코어나 확장을 고치면 다시 실행. 설치한 패키지에서는 `sh "$(npm root -g)/vibecoder-docent/scripts/install-omp.sh"`.
+
+## `/docent` (Herdr)
+
+Herdr 창의 omp 입력창에서 `/docent`를 치면 오른쪽 창에 도슨트 터미널이 뜨고 지금 omp 세션이 바로 열린다. 이미 같은 작업 공간에 도슨트 창이 있으면 그 창으로 이동한다. 확장은 `docent herdr --cwd <세션 폴더> --session-file <세션 파일>`만 부르므로 `docent`가 PATH 에 있어야 한다. 새 omp 세션은 첫 메시지 전에는 비어 있어서 같은 폴더의 최근 세션이 열린다 (ADR 0044).
 
 ## 호출
 

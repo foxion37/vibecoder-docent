@@ -3,8 +3,9 @@ import { runTerminal } from "../app/terminal-ui.mjs";
 import { terminalSafeText } from "../app/terminal-input.mjs";
 
 const HELP = [
-	"사용법: docent-tui [--url <주소>]",
-	"  --url <주소>  도슨트 서버 주소 (기본값: http://127.0.0.1:4747)",
+	"사용법: docent-tui [--url <주소>] [--session <세션 id>]",
+	"  --url <주소>          도슨트 서버 주소 (기본값: http://127.0.0.1:4747)",
+	"  --session <세션 id>   시작하자마자 이 세션을 연다 (docent herdr, OMP /docent 가 사용)",
 	"  -h, --help    도움말 보기",
 	"",
 	"docent-tui 는 이미 실행 중인 서버에 연결하며 서버를 시작하거나 종료하지 않아요.",
@@ -31,6 +32,7 @@ if (args.includes("-h") || args.includes("--help")) {
 	console.log(HELP);
 } else {
 	let baseUrl = "http://127.0.0.1:4747";
+	let initialSession = null;
 	for (let index = 0; index < args.length; index++) {
 		if (args[index] === "--url") {
 			if (!args[index + 1] || args[index + 1].startsWith("--")) {
@@ -38,6 +40,12 @@ if (args.includes("-h") || args.includes("--help")) {
 				break;
 			}
 			baseUrl = args[++index];
+		} else if (args[index] === "--session") {
+			if (!args[index + 1] || args[index + 1].startsWith("--")) {
+				usageError("--session 뒤에 세션 id 가 필요해요.");
+				break;
+			}
+			initialSession = args[++index];
 		} else {
 			usageError(`알 수 없는 인자예요: ${terminalSafeText(args[index])}`);
 			break;
@@ -56,7 +64,7 @@ if (args.includes("-h") || args.includes("--help")) {
 	}
 	if (process.exitCode !== 2) {
 		try {
-			await runTerminal({ baseUrl });
+			await runTerminal({ baseUrl, initialSession });
 		} catch (error) {
 			console.error(`docent-tui: ${terminalSafeText(error?.message || String(error))}`);
 			process.exitCode = 1;

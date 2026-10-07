@@ -146,6 +146,7 @@ if (args[0] === '--version') {
 	return {
 		sessionId,
 		ompBin: executable,
+		sessionFile,
 		get address() { return address; },
 		async api(path, method = "GET", value) {
 			const response = await fetch(address + path, { method, ...(value === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(value) }), signal: AbortSignal.timeout(15000) });

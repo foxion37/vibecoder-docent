@@ -4,6 +4,7 @@ import { TerminalInput, graphemes, terminalSafeText, wrapTerminalText } from "./
 import { createTerminalTheme } from "./terminal-theme.mjs";
 import { createTerminalMarkdown } from "./terminal-markdown.mjs";
 import { renderStatusRow, statusMetrics, statusSegments, statusSymbols } from "./terminal-status.mjs";
+import { createHerdrReporter } from "./terminal-herdr.mjs";
 import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 const ESC = "\u001b[";
@@ -73,7 +74,7 @@ function requestStatus(event) {
 }
 
 /** Runs a full-screen, dependency-free TTY client. Server lifetime remains independent of this process. */
-export async function runTerminal({ baseUrl, stdin = process.stdin, stdout = process.stdout } = {}) {
+export async function runTerminal({ baseUrl, stdin = process.stdin, stdout = process.stdout, env = process.env, initialSession = null } = {}) {
 	if (!stdin.isTTY || !stdout.isTTY || typeof stdin.setRawMode !== "function") {
 		throw new Error("대화형 터미널에서 실행해야 해요. 일반 터미널에서 docent-tui 를 실행하세요.");
 	}
@@ -81,6 +82,7 @@ export async function runTerminal({ baseUrl, stdin = process.stdin, stdout = pro
 	const markdown = createTerminalMarkdown(theme);
 	const symbols = statusSymbols();
 	const api = new TerminalClient(baseUrl);
+	const herdr = createHerdrReporter({ env, baseUrl });
 	let profiles, sessions;
 	try {
 		[profiles, sessions] = await Promise.all([api.profiles(), api.sessions()]);
@@ -415,6 +417,7 @@ export async function runTerminal({ baseUrl, stdin = process.stdin, stdout = pro
 	function render() {
 		if (!state.running) return;
 		syncSpinner();
+		syncHerdr();
 		const columns = width(), rows = height();
 		const body = state.picker ? pickerBody() : conversationBody();
 		const composer = composerFrame();
@@ -1128,6 +1131,14 @@ export async function runTerminal({ baseUrl, stdin = process.stdin, stdout = pro
 		} catch {}
 	}
 
+	/** Herdr agents 창: 직접 물은 설명만 작업 중으로 알린다. 미리 설명은 서버 쪽 일이라 알리지 않는다 (ADR 0043). */
+	function syncHerdr() {
+		const ask = state.ask;
+		if (!ask) herdr.update("idle");
+		else if (ask.disconnected) herdr.update("blocked", "설명 연결이 끊겼어요. Ctrl+R로 다시 연결하세요.");
+		else herdr.update("working", ask.cancelling ? "설명을 멈추는 중이에요" : ask.stage || "설명을 준비하는 중이에요");
+	}
+
 	function exit() {
 		if (!state.running) return;
 		state.running = false;
@@ -1249,10 +1260,16 @@ export async function runTerminal({ baseUrl, stdin = process.stdin, stdout = pro
 		process.once("SIGHUP", onSignal);
 		stdout.write(`${titleSupported ? `\u001b[22;0t\u001b]2;${TITLE}\u0007` : ""}${ESC}?1049h${ESC}?25l${ESC}?2004h`);
 		loadModels();
+		if (initialSession) {
+			// docent herdr / OMP /docent: 지정한 세션을 바로 연다. 최근 200개 밖이어도 id 로 열 수 있다.
+			const listed = state.sessions.find((entry) => entry.id === initialSession);
+			void switchSession(listed ?? { id: initialSession, provider: initialSession.split(":")[0], title: "지정한 세션" });
+		}
 		render();
 		await finished;
 	} finally {
 		input.close();
 		restoreTerminal();
+		await herdr.release();
 	}
 }

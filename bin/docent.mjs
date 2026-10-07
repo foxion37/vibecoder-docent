@@ -29,11 +29,40 @@ if (args[0] === "doctor") {
 	console.log(rest.includes("--json") ? JSON.stringify(report, null, 2) : formatReport(report));
 	process.exit(report.ok ? 0 : 1);
 }
+if (args[0] === "herdr") {
+	const rest = args.slice(1);
+	const value = (name) => (rest.includes(name) ? rest[rest.indexOf(name) + 1] : undefined);
+	const known = new Set(["--session", "--session-file", "--cwd", "--port"]);
+	const unknown = rest.find((arg, i) => !known.has(arg) && !known.has(rest[i - 1]));
+	if (unknown || [...known].some((name) => rest.includes(name) && !value(name))) {
+		console.error(`docent herdr: ${unknown ? `알 수 없는 옵션이에요: ${unknown}` : "옵션 뒤에 값이 필요해요."}\nusage: docent herdr [--session <id> | --session-file <경로>] [--cwd <폴더>] [--port N]`);
+		process.exit(2);
+	}
+	const { launchInHerdr } = await import("../app/herdr-launch.mjs");
+	const { config } = await import("../app/store.mjs");
+	try {
+		const result = await launchInHerdr({
+			port: Number(value("--port") ?? process.env.DOCENT_PORT ?? (await config()).port ?? 4747),
+			session: value("--session") ?? null,
+			sessionFile: value("--session-file") ?? null,
+			cwd: value("--cwd") ?? process.cwd(),
+		});
+		const where = result.session ? `세션 ${result.session}` : "세션 목록";
+		console.log(result.action === "focused"
+			? `이미 열린 도슨트 창(${result.pane})으로 이동했어요.`
+			: `오른쪽 창(${result.pane})에 도슨트를 띄웠어요. ${where}을 열어요.${result.startedServer ? " 꺼져 있던 서버도 켰어요." : ""}`);
+		process.exit(0);
+	} catch (error) {
+		console.error(`docent herdr: ${error.message}`);
+		process.exit(error.code === "NOT_HERDR" ? 2 : 1);
+	}
+}
 if (args.includes("-h") || args.includes("--help")) {
 	console.log(
 		[
 			"usage: docent [--no-open] [--port N] [--host <ip|tailscale>] [--peer 이름=URL ...]",
 			"       docent doctor [--json] [--probe] [--port N]   설치 상태 점검. --probe 는 모델을 한 번 불러 로그인까지 확인",
+			"       docent herdr [--session <id> | --session-file <경로>]   Herdr 창 오른쪽에 도슨트 터미널을 띄움",
 			"  --host tailscale     이 컴퓨터의 테일스케일 주소에도 열어 다른 컴퓨터의 docent 가 읽어 가게 한다",
 			"  --peer book=http://peer-host.example:4747   그 컴퓨터의 세션을 내 목록에 합친다",
 			"  ~/.docent/config.json  {\"host\":\"tailscale\",\"peers\":{\"book\":\"http://peer-host.example:4747\"}}",

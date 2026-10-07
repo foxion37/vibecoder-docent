@@ -552,6 +552,14 @@ const handler = async (req, res) => {
 			all.sort((a, b) => (a.updated < b.updated ? 1 : -1));
 			return json(res, 200, all.slice(0, 200));
 		}
+		if (req.method === "GET" && url.pathname === "/api/sessions/resolve") {
+			// 에이전트가 자기 세션 파일 경로를 알려 주면 도슨트 세션 id 로 바꾼다 (docent herdr, ADR 0044). 이 컴퓨터의 제공자만 본다.
+			const path = resolve(url.searchParams.get("path") ?? "");
+			const provider = providers.find((p) => p.root && path.startsWith(`${p.root}/`) && path.endsWith(".jsonl"));
+			// 아직 저장되지 않은 새 세션(첫 메시지 전)은 열 수 없으니 없다고 답한다. 호출자는 폴더 기준 최근 세션으로 넘어간다.
+			if (!provider || !(await stat(path).catch(() => null))?.size) return json(res, 404, { error: "이 파일은 도슨트가 읽는 세션 폴더에 없거나 아직 비어 있어요." });
+			return json(res, 200, { id: `${provider.id}:${path.slice(provider.root.length + 1)}` });
+		}
 		if (req.method === "GET" && url.pathname === "/api/transcript") {
 			const id = url.searchParams.get("id") ?? "";
 			const md = await providerOf(id).transcript(id);

@@ -28,6 +28,9 @@ app/terminal-ui.mjs       터미널 클라이언트 화면: 대화, 입력창, �
 app/terminal-status.mjs   터미널 상태줄 규칙 표와 그리기, 좁은 화면 항목 빼기 (ADR 0040)
 app/terminal-markdown.mjs Pi Markdown 렌더러 연결과 제어 문자 차단 (ADR 0038)
 app/terminal-theme.mjs    OMP titanium 역할별 색 (ADR 0038)
+app/terminal-herdr.mjs    Herdr 안에서 agents 창에 도슨트 상태(대기, 작업 중, 막힘)와 재시작 명령을 알림 (ADR 0043)
+app/herdr-launch.mjs      `docent herdr`: Herdr 창을 나눠 도슨트 터미널을 띄우고 세션을 고름, 이미 있으면 이동 (ADR 0044)
+adapters/omp/docent-command.ts  OMP `/docent` 슬래시 명령. `docent herdr`를 부르는 얇은 확장 (ADR 0044)
 app/doctor.mjs            `docent doctor`: Node, omp와 모델, 서버와 세션 수, 선택적 모델 호출 점검 (ADR 0041)
 INSTALL-AGENT.md          링크 하나로 에이전트가 따라 하는 설치 안내 (ADR 0041)
 bin/docent-mobile.mjs    Tailscale Serve 상태 확인과 명시적 사설 HTTPS 설정

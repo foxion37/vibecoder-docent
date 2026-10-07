@@ -20,7 +20,7 @@ async function terminal(t, baseUrl) {
 		done();
 	} });
 	Object.assign(stdout, { isTTY: true, columns: 84, rows: 31 });
-	const finished = runTerminal({ baseUrl, stdin, stdout });
+	const finished = runTerminal({ baseUrl, stdin, stdout, env: {} });
 	finished.catch(() => {});
 	const ui = {
 		get screen() { return screen; },

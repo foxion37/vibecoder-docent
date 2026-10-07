@@ -2,6 +2,15 @@
 
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/). 버전은 [SemVer](https://semver.org/lang/ko/). 0.x 동안은 minor 가 새 기능, patch 가 고침.
 
+## [0.18.0] — 2026-10-07
+
+### 추가
+- Herdr에서 실행하면 `docent-tui`가 agents 창에 `docent`로 나타남. 직접 물은 설명이 진행 중이면 작업 중, 연결이 끊기면 막힘, 끝나면 대기로 바뀌고 종료하면 사라짐. 미리 설명은 표시하지 않음. Herdr 0.10 이후에는 재시작 뒤 다시 띄울 명령도 알림 (ADR 0043).
+- `docent herdr`: 지금 Herdr 창 오른쪽에 도슨트 터미널을 띄움. 서버가 꺼져 있으면 백그라운드로 켜고, 에이전트의 세션 파일이나 작업 폴더의 최근 세션을 바로 열며, 이미 도슨트 창이 있으면 그 창으로 이동. OMP용 `/docent` 명령(확장)을 `scripts/install-omp.sh`가 함께 설치. `docent-tui --session <id>`, 세션 파일을 세션 id로 바꾸는 `GET /api/sessions/resolve` 추가 (ADR 0044).
+
+### 고침
+- `docent doctor`가 omp 모델 목록을 읽지 못했을 때 "확인 못 함개"로 표시하던 문구를 바로잡음.
+
 ## [0.17.0] — 2026-10-07
 
 ### 추가

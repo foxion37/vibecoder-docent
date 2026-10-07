@@ -94,7 +94,7 @@ export function formatReport(report) {
 		`도슨트 ${report.docent.version} 점검`,
 		`${mark(report.node.ok)} Node.js ${report.node.version} (필요 ${report.node.required} 이상)`,
 		`${mark(report.omp.found)} omp ${report.omp.version ?? "없음"}`,
-		`${mark(Boolean(report.omp.chatModels))} omp 채팅 모델 ${report.omp.chatModels ?? "확인 못 함"}개`,
+		`${mark(Boolean(report.omp.chatModels))} omp 채팅 모델 ${report.omp.chatModels ? `${report.omp.chatModels}개` : "확인 못 함"}`,
 	];
 	if (report.probe) lines.push(`${mark(report.probe.ok)} 모델 호출 ${report.probe.ok ? `성공 (${Math.round(report.probe.ms / 100) / 10}초)` : "실패"}`);
 	else lines.push("[--] 모델 호출은 확인하지 않았어요. docent doctor --probe 로 한 번 확인할 수 있어요.");
