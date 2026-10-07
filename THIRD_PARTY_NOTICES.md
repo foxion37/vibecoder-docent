@@ -13,7 +13,9 @@
 
 ## 번들에 포함한 JavaScript 코드
 
-React, react-dom, Streamdown은 빌드 시에만 사용하는 개발 의존성이다. 설치본은 미리 만든 `app/assets/docent-markdown.js`를 제공하며, tgz 설치 시 별도의 런타임 의존성 패키지를 설치하지 않는다. 개발 의존성으로 분류하더라도 번들에 포함된 외부 코드는 재배포되므로 아래 저작권 고지와 라이선스를 함께 제공한다.
+React, react-dom, Streamdown은 빌드 시에만 사용하는 개발 의존성이다. 설치본은 미리 만든 `app/assets/docent-markdown.js`를 제공하며, 웹 화면을 위해 별도의 런타임 의존성 패키지를 설치하지 않는다. 개발 의존성으로 분류하더라도 번들에 포함된 외부 코드는 재배포되므로 아래 저작권 고지와 라이선스를 함께 제공한다.
+
+터미널 클라이언트(`docent-tui`)는 런타임 의존성 `@earendil-works/pi-tui` 0.99.1(MIT, Mario Zechner)과 그 의존성 `marked`(MIT), `get-east-asian-width`(MIT)를 사용한다. 이 패키지들은 번들하지 않고 tgz 설치 때 npm이 함께 설치하며, 각 패키지에 들어 있는 라이선스를 따른다.
 
 아래 표는 `app/build.mjs`와 같은 설정으로 esbuild의 `metafile: true`를 켜서 조사한 결과다. `outputs["app/assets/docent-markdown.js"].inputs` 중 `bytesInOutput > 0`인 입력 파일을 패키지별로 묶고, 설치된 각 패키지의 `package.json`에 있는 버전·license 필드와 대조했다. 실제 JS 번들에 포함된 91개 패키지만 기재하며, 타입 선언·제거된 코드·esbuild 자체 등 빌드에만 필요하고 출력에 포함되지 않은 패키지는 제외했다. 원래 빌드와 조사용 빌드의 출력이 바이트 단위로 같음을 확인했다.
 

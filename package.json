@@ -1,8 +1,9 @@
 {
   "name": "vibecoder-docent",
-  "version": "0.16.21",
+  "version": "0.17.0",
   "private": true,
   "type": "module",
+  "main": "app/desktop/main.cjs",
   "description": "바이브코더 도슨트 — 코딩 세션의 작업 내용과 개발 개념을 쉬운 한국어로 설명하는 로컬 웹앱.",
   "license": "MIT",
   "author": "foxion37",
@@ -24,7 +25,9 @@
     "바이브코딩"
   ],
   "bin": {
-    "docent": "bin/docent.mjs"
+    "docent": "bin/docent.mjs",
+    "docent-tui": "bin/docent-tui.mjs",
+    "docent-mobile": "bin/docent-mobile.mjs"
   },
   "files": [
     "bin",
@@ -33,20 +36,29 @@
     "app/index.html",
     "app/favicon.svg",
     "app/assets",
+    "app/desktop",
+    "app/mobile.css",
+    "app/manifest.webmanifest",
+    "app/sw.js",
+    "app/offline.html",
     "prompt",
     "scripts",
     "!scripts/check-design.mjs",
     "adapters",
     "README.md",
+    "INSTALL-AGENT.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
     "CHANGELOG.md"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "build": "node app/build.mjs",
+    "build:macos": "node scripts/build-macos.mjs",
+    "desktop": "electron .",
+    "terminal": "node bin/docent-tui.mjs",
     "prepack": "npm run build",
     "start": "node app/server.mjs",
     "transcript": "node scripts/transcript-omp.mjs",
@@ -54,10 +66,15 @@
     "check:design": "node scripts/check-design.mjs"
   },
   "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.5.1",
     "esbuild": "0.28.2",
     "pretendard": "^1.3.9",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "streamdown": "2.6.0"
+  },
+  "dependencies": {
+    "@earendil-works/pi-tui": "0.99.1"
   }
 }

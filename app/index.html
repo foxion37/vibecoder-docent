@@ -2,9 +2,13 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>바이브코더 도슨트</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="theme-color" content="#f6f6f4" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/app-icon-192.png" />
 <style>
   @font-face { font-family:"Pretendard Variable"; font-weight:45 920; font-style:normal; font-display:swap; src:url("/assets/PretendardVariable.woff2") format("woff2-variations") }
   :root { color-scheme:light; --bg:#f6f6f4; --panel:#fff; --line:#e3e2dd; --ink:#1d1d1b; --mute:#6b6a66; --accent:#FFD000; --accent-ink:#8a6a00; --done:#1f8a4c; --run:#b7791f; --blk:#c62828; --hover:#fffae3; --soft:#fff3c2; --btn:#fff; --btn-hover:#fff7d6; --on-accent:#1d1d1b; --on-status:#fff; }
@@ -425,8 +429,16 @@
   }
 </style>
 <link rel="stylesheet" href="/assets/docent-markdown.css" />
+<link rel="stylesheet" href="/mobile.css" />
 </head>
-<body>
+<body data-mobile-view="sessions">
+<nav id="mobileNav" aria-label="도슨트 화면">
+  <button type="button" data-view="sessions" aria-pressed="true">세션</button>
+  <button type="button" data-view="work" aria-pressed="false">작업 내용</button>
+  <button type="button" data-view="chat" aria-pressed="false">대화</button>
+  <button type="button" id="mobileSettings" aria-haspopup="dialog" aria-controls="settings">설정</button>
+</nav>
+<p id="connectionNotice" role="status" hidden></p>
 <aside>
   <h1><button id="homeBtn" class="brand" type="button" aria-label="바이브코더 도슨트, 최근 작업으로" data-tip="최근 작업으로"><img class="logo" src="/favicon.svg" alt="" width="32" height="32" /><span class="brand-name">바이브코더 도슨트</span></button>
     <span class="aside-tools">
@@ -584,6 +596,11 @@
       </ul>
       <p id="tailscaleStatus" class="notice" role="status"></p>
     </section>
+    <section class="set-card">
+      <h3>휴대폰에 설치하기</h3>
+      <p id="installHelp" class="notice"></p>
+      <button id="installApp" class="control" type="button" hidden>홈 화면에 설치</button>
+    </section>
   </section>
 </dialog>
 <section id="evidencePanel" role="dialog" aria-modal="false" aria-labelledby="evidenceTitle" hidden>
@@ -592,6 +609,7 @@
 </section>
 <script type="module">
 import { mountMarkdown, unmountMarkdown } from "/assets/docent-markdown.js";
+import { mobileView } from "/mobile.mjs";
 const $ = (s) => document.querySelector(s);
 $("#settingsBtn").onclick = () => {
   $("#settings").showModal();
@@ -724,7 +742,8 @@ function composerKeydown(event) {
     if (state.busy && state.draft.trim()) steerActiveAsk(); else submitDraft();
     return;
   }
-  if (!event.shiftKey) { submitDraft(); return; }
+  const mobileInput = input === $("#q") && matchMedia("(max-width:600px)").matches;
+  if (!event.shiftKey && !mobileInput) { submitDraft(); return; }
   const caret = input.selectionStart, start = input.value.lastIndexOf("\n", caret - 1) + 1;
   const line = input.value.slice(start, caret);
   const numbered = /^([ \t]*)(\d+)\. (.*)$/.exec(line), bullet = /^([ \t]*)• (.*)$/.exec(line);
@@ -741,7 +760,7 @@ const STOP_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true
 function syncComposer() {
   if ($("#q").value !== state.draft) { $("#q").value = state.draft; fitComposer($("#q")); }
   $("#q").disabled = !current || !profilesReady || historyLoading;
-  setPlaceholder($("#q"), historyLoading ? PLACEHOLDERS.loading : PLACEHOLDERS.idle);
+  setPlaceholder($("#q"), historyLoading ? PLACEHOLDERS.loading : matchMedia("(max-width:600px)").matches ? "질문 입력하기 (Enter 줄바꿈)" : PLACEHOLDERS.idle);
   const send = $("#send");
   send.disabled = $("#q").disabled;
   send.type = state.busy ? "button" : "submit";
@@ -1013,10 +1032,12 @@ function showChat() {
   document.querySelectorAll("main > header, #workspace, #liveNotice").forEach((e) => e.hidden = false);
   $("#review").hidden = true;
   $("#reviewBtn").classList.remove("on"); $("#reviewBtn").setAttribute("aria-pressed", "false");
+  mobileView(chatOpen ? "chat" : current ? "work" : "sessions");
 }
 
 async function showReview() {
   view = "review";
+  mobileView("review");
   const request = ++reviewRequest, c = capture();
   const body = $("#reviewBody"); clearSurface(body);
   body.append(el("p", "review-empty", "배운 내용을 불러오는 중이에요."));
@@ -1362,6 +1383,7 @@ async function toggleFavorite(focus) {
 function setStage() {
   const stage = !current ? "none" : chatOpen ? "chat" : "work";
   $("#workspace").dataset.stage = stage;
+  mobileView(stage === "none" ? "sessions" : stage);
   $("#chatIntro").hidden = stage === "chat"; $("#chatBody").hidden = stage !== "chat";
   $("#chatIntroText").textContent = current ? "작업 내용에서 카드를 누르면 그 내용에 대한 대화가 열려요." : "세션을 고르면 작업 내용이 열려요.";
   $("#sessionThreadBtn").hidden = !current;
@@ -1449,7 +1471,7 @@ function openThread(focus) {
   setFocus(focus); chatOpen = true; setStage();
   const body = $("#chatBody"); body.classList.remove("enter"); void body.offsetWidth; body.classList.add("enter");
   renderThread({ top: true });
-  if (!$("#q").disabled && !pipWindow) $("#q").focus();
+  if (!$("#q").disabled && !pipWindow && !matchMedia("(max-width:600px)").matches) $("#q").focus();
 }
 
 function closeThread() {
@@ -2333,6 +2355,15 @@ setSide(saved("side") === "0" || (saved("side") === null && window.innerWidth <=
 window.addEventListener("resize", () => {
   if (window.innerWidth <= 560 && !document.body.classList.contains("side-collapsed")) setSide(true);
 });
+$("#mobileNav").addEventListener("click", (event) => {
+  const target = event.target.closest("[data-view]");
+  if (!target) return;
+  if (target.dataset.view === "sessions") { mobileView("sessions"); return; }
+  showChat();
+  if (target.dataset.view === "chat" && current && !chatOpen) openThread(null);
+  mobileView(target.dataset.view);
+});
+$("#mobileSettings").onclick = () => $("#settingsBtn").click();
 $("#form").onsubmit = (e) => { e.preventDefault(); submitDraft(); };
 $("#profile").onchange = () => switchProfile($("#profile").value);
 $("#profileNew").onclick = () => {

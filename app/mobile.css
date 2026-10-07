@@ -1,0 +1,61 @@
+/* A single reading surface on phones. Desktop and PiP retain their own layout. */
+#mobileNav { display:none }
+#connectionNotice { position:fixed; z-index:40; bottom:env(safe-area-inset-bottom, 0px); left:0; right:0; margin:0; padding:10px 16px; background:var(--soft); color:var(--ink); text-align:center; font-size:14px }
+@media (max-width:600px) {
+  html { height:100%; overflow:hidden }
+  body, body.side-collapsed { height:var(--mobile-height, 100dvh); width:100%; overflow:hidden; display:grid; grid-template-columns:minmax(0, 1fr); grid-template-rows:auto minmax(0, 1fr); transition:none; padding-top:env(safe-area-inset-top, 0px); padding-left:env(safe-area-inset-left, 0px); padding-right:env(safe-area-inset-right, 0px); padding-bottom:env(safe-area-inset-bottom, 0px) }
+  #mobileNav { display:flex; gap:4px; padding:6px 8px; background:var(--panel); border-bottom:1px solid var(--line); grid-row:1; grid-column:1; z-index:7 }
+  #mobileNav button { flex:1; min-width:0; min-height:44px; border:0; border-radius:10px; padding:6px; font:inherit; background:transparent }
+  #mobileNav button[aria-pressed="true"] { background:var(--accent); color:var(--on-accent) }
+  body > aside, body > main { grid-row:2; grid-column:1; min-height:0; width:100% }
+  body:not([data-mobile-view="sessions"]) > aside { display:none }
+  body[data-mobile-view="sessions"] > main { display:none }
+  body.side-collapsed aside { overflow:hidden }
+  body.side-collapsed aside h1 { display:flex; justify-content:space-between; padding:8px 12px; border-bottom:1px solid var(--line) }
+  body.side-collapsed .brand { display:flex }
+  body.side-collapsed .side-title { display:flex }
+  body.side-collapsed .filter-row, body.side-collapsed #sessions { display:block }
+  body.side-collapsed .aside-tools { flex-direction:row; margin-left:auto }
+  #sideToggle, #pipBtn, .resizer { display:none }
+  aside h1 { flex-wrap:nowrap; gap:6px }
+  .brand-name { font-size:14px }
+  .icon-btn, .icon-btn.small { width:44px; height:44px; flex:none }
+  .ev .event-heading { padding-right:48px }
+  .thread-source-head .icon-btn { width:36px; height:36px }
+  #mainHeader { height:auto; min-height:52px; padding:6px 12px; gap:4px 8px; flex-wrap:wrap }
+  #mainHeader > .t { flex:1; font-size:14px }
+  .header-actions { margin-left:auto }
+  .header-status { flex-basis:100%; order:2; font-size:12px }
+  #workspace { grid-template-columns:minmax(0, 1fr); grid-template-rows:minmax(0, 1fr) }
+  #workspace > section { grid-row:1; grid-column:1 }
+  body[data-mobile-view="work"] #chatPane { display:none }
+  body[data-mobile-view="chat"] #flowPane { display:none }
+  body[data-mobile-view="work"] #workspace[data-stage="none"] #flowPane { display:flex }
+  #flowPane { border:0 }
+  .pane-title { min-height:52px; padding:4px 12px }
+  #flow { padding:12px }
+  #log { padding:0 12px 16px; scrollbar-gutter:auto }
+  #log .a, #log .thread-source { resize:none; max-width:100%; width:auto !important; height:auto !important }
+  #chatBody > footer { padding:8px 10px }
+  .composer { flex-wrap:wrap; gap:4px; border-radius:18px; padding:5px }
+  .composer textarea { font-size:16px; flex-basis:calc(100% - 56px); height:44px; padding:11px 8px; max-height:120px }
+  .composer .send { width:44px; height:44px; order:1 }
+  .composer .explain-menu { order:2; margin:0 }
+  .composer .steer-btn { order:3; min-height:36px; margin:0 }
+  .explain-menu summary { min-height:36px }
+  .explain-menu .chips { left:0; right:auto; max-width:calc(100vw - 40px) }
+  input, select, textarea { font-size:16px }
+  #settings { width:calc(100% - 16px); max-width:none; max-height:calc(var(--mobile-height, 100dvh) - 24px); padding:0 }
+  #settings .settings-tabs { overflow:auto }
+  #settings .settings-tabs button { min-height:44px; padding:8px }
+  #settings .profile-row, #settings .depth-row { flex-wrap:wrap }
+  #settings .depth-row select { min-width:0; max-width:100% }
+  #settings .profile-row select { min-width:0 }
+  .mode-table { font-size:12px }
+  .session-pop { position:fixed; left:12px; right:12px; top:130px; width:auto; max-height:60dvh; overflow:auto }
+  #evidencePanel { left:0; right:0; top:0; bottom:0; width:100%; max-width:none; padding-top:env(safe-area-inset-top, 0px); padding-bottom:env(safe-area-inset-bottom, 0px) }
+  #review { min-height:0 }
+  .review-head { gap:8px; padding:12px }
+  .review-head .t { font-size:16px }
+  #connectionNotice { bottom:0 }
+}

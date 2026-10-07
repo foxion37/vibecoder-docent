@@ -56,7 +56,9 @@ const control = async () => JSON.parse(await readFile(${JSON.stringify(controlFi
 const log = value => appendFile(${JSON.stringify(logFile)}, JSON.stringify(value) + '\\n');
 const model = flag('--model');
 const provider = flag('--provider');
-if (args[0] === 'models') {
+if (args[0] === '--version') {
+	console.log('omp-fixture 0.0.0');
+} else if (args[0] === 'models') {
 	process.stdout.write(await readFile(${JSON.stringify(catalogFile)}, 'utf8'));
 } else if (flag('--mode') === 'rpc') {
 	const out = value => process.stdout.write(JSON.stringify(value) + '\\n');
@@ -143,6 +145,7 @@ if (args[0] === 'models') {
 	await start();
 	return {
 		sessionId,
+		ompBin: executable,
 		get address() { return address; },
 		async api(path, method = "GET", value) {
 			const response = await fetch(address + path, { method, ...(value === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(value) }), signal: AbortSignal.timeout(15000) });

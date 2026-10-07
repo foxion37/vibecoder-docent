@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+import { runTerminal } from "../app/terminal-ui.mjs";
+import { terminalSafeText } from "../app/terminal-input.mjs";
+
+const HELP = [
+	"사용법: docent-tui [--url <주소>]",
+	"  --url <주소>  도슨트 서버 주소 (기본값: http://127.0.0.1:4747)",
+	"  -h, --help    도움말 보기",
+	"",
+	"docent-tui 는 이미 실행 중인 서버에 연결하며 서버를 시작하거나 종료하지 않아요.",
+	"별도 터미널에서 docent --no-open 으로 서버를 시작한 다음 실행하세요.",
+	"",
+	"입력창이 항상 화면 아래에 있어요. 그냥 입력하고 Enter 로 질문을 보내세요.",
+	"입력창에 / 를 쓰면 명령, @ 는 세션, # 은 대화, $ 는 설정 목록이 열려요.",
+	"목록은 방향키로 고르고 Enter 로 실행해요. Esc 를 누르면 기호를 질문 글자로 남겨요.",
+	"",
+	"단축키: Ctrl+P 세션 | Ctrl+T 대화 | Ctrl+O 저장된 답변 | Ctrl+G 프로필",
+	"Ctrl+R 같은 요청 다시 연결, 새로고침 | Ctrl+S 바로잡기 전환 | Ctrl+J 줄바꿈",
+	"Ctrl+C 진행 중인 설명 중단 | Ctrl+D 종료",
+	"목록은 방향키와 Enter 로 고르고 Esc 로 닫아요. PgUp/PgDn 으로 화면을 스크롤해요.",
+	"붙여넣기로 여러 줄을 입력할 수 있고 q, i, ! 같은 글자도 그대로 입력돼요.",
+].join("\n");
+
+function usageError(message) {
+	console.error(`docent-tui: ${message}\n\n${HELP}`);
+	process.exitCode = 2;
+}
+
+const args = process.argv.slice(2);
+if (args.includes("-h") || args.includes("--help")) {
+	console.log(HELP);
+} else {
+	let baseUrl = "http://127.0.0.1:4747";
+	for (let index = 0; index < args.length; index++) {
+		if (args[index] === "--url") {
+			if (!args[index + 1] || args[index + 1].startsWith("--")) {
+				usageError("--url 뒤에 서버 주소가 필요해요.");
+				break;
+			}
+			baseUrl = args[++index];
+		} else {
+			usageError(`알 수 없는 인자예요: ${terminalSafeText(args[index])}`);
+			break;
+		}
+	}
+	if (process.exitCode !== 2) {
+		try {
+			const url = new URL(baseUrl);
+			if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
+				throw new Error("주소에는 http 또는 https 서버의 원점만 지정하세요. 예: http://127.0.0.1:4747");
+			}
+			baseUrl = url.origin;
+		} catch (error) {
+			usageError(error.message || "서버 주소를 확인하세요.");
+		}
+	}
+	if (process.exitCode !== 2) {
+		try {
+			await runTerminal({ baseUrl });
+		} catch (error) {
+			console.error(`docent-tui: ${terminalSafeText(error?.message || String(error))}`);
+			process.exitCode = 1;
+		}
+	}
+}

@@ -11,14 +11,35 @@ if (args.includes("-v") || args.includes("--version")) {
 	console.log(JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../package.json"), "utf8")).version);
 	process.exit(0);
 }
+if (args[0] === "doctor") {
+	const rest = args.slice(1);
+	const unknown = rest.find((arg, i) => !["--json", "--probe", "--port"].includes(arg) && rest[i - 1] !== "--port");
+	if (unknown) {
+		console.error(`docent doctor: 알 수 없는 옵션이에요: ${unknown}\nusage: docent doctor [--json] [--probe] [--port N]`);
+		process.exit(2);
+	}
+	const { diagnose, formatReport } = await import("../app/doctor.mjs");
+	const { config } = await import("../app/store.mjs");
+	const portArg = rest.includes("--port") ? Number(rest[rest.indexOf("--port") + 1]) : Number(process.env.DOCENT_PORT ?? (await config()).port ?? 4747);
+	if (!Number.isInteger(portArg) || portArg < 1 || portArg > 65535) {
+		console.error("docent doctor: 포트는 1에서 65535 사이 정수여야 해요.");
+		process.exit(2);
+	}
+	const report = await diagnose({ port: portArg, probe: rest.includes("--probe") });
+	console.log(rest.includes("--json") ? JSON.stringify(report, null, 2) : formatReport(report));
+	process.exit(report.ok ? 0 : 1);
+}
 if (args.includes("-h") || args.includes("--help")) {
 	console.log(
 		[
 			"usage: docent [--no-open] [--port N] [--host <ip|tailscale>] [--peer 이름=URL ...]",
+			"       docent doctor [--json] [--probe] [--port N]   설치 상태 점검. --probe 는 모델을 한 번 불러 로그인까지 확인",
 			"  --host tailscale     이 컴퓨터의 테일스케일 주소에도 열어 다른 컴퓨터의 docent 가 읽어 가게 한다",
 			"  --peer book=http://peer-host.example:4747   그 컴퓨터의 세션을 내 목록에 합친다",
 			"  ~/.docent/config.json  {\"host\":\"tailscale\",\"peers\":{\"book\":\"http://peer-host.example:4747\"}}",
 			"  TYPESAFE_API_KEY     (선택) Jev 판정 사용",
+			"  docent-tui [--url URL]  Ghostty, Kaku 등에서 터미널 화면으로 연결",
+			"  docent-mobile [--enable]  모바일 PWA용 Tailscale 사설 HTTPS 연결 확인",
 		].join("\n"),
 	);
 	process.exit(0);

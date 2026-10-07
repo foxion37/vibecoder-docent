@@ -154,3 +154,17 @@ test("Korean text split across output chunks is decoded intact, not stored with 
 	assert.match(answer.raw, /설명 깊이와 출력을 줄이지 않은 답변입니다/);
 	assert.equal(answer.raw.includes("\uFFFD"), false);
 });
+
+test("graceful server shutdown stops its running model and keeps the request cancelled after restart", async (t) => {
+	const f = await fixture(t);
+	await f.control({ slowExplanation: 10000 });
+	const pending = f.stream({ question: "종료 중인 설명", requestId: "shutdown" }).catch(() => null);
+	await until(async () => (await f.calls()).some((call) => call.pid));
+	const pid = (await f.calls()).find((call) => call.pid).pid;
+	t.after(() => { try { process.kill(pid, "SIGTERM"); } catch {} });
+	await f.restart();
+	assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
+	await pending;
+	assert.equal((await f.stream({ question: "종료 중인 설명", requestId: "shutdown" })).at(-1).type, "cancelled");
+	assert.deepEqual((await f.api(`/api/history?id=${encodeURIComponent(f.sessionId)}`)).body, []);
+});

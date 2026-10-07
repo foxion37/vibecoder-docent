@@ -47,6 +47,9 @@ const RULES = [
 	{ name: "바로잡기 표시 중 정렬", rule: "composer.steer 에서 textarea, quickQuestion, steer, send 의 centerY 가 모두 1px 이내", pass: (m) => { const c = m.composer.steer; return spread([c.textarea.centerY, c.quickQuestion.centerY, c.steer.centerY, c.send.centerY]) <= 1; }, show: (m) => { const c = m.composer.steer; return [c.textarea, c.quickQuestion, c.steer, c.send].map((b) => b.centerY).join(", "); } },
 	{ name: "작은 창 카드 제목", rule: "pipCardTitlePx 가 workCardTitlePx 와 같고 14 이상", pass: (m) => m.pipCardTitlePx === m.workCardTitlePx && m.pipCardTitlePx >= 14, show: (m) => `작은 창 ${m.pipCardTitlePx}px, 본문 카드 ${m.workCardTitlePx}px` },
 	{ name: "글자 굵기", rule: "weights 에서 body, headline, cardTitle 이 400 이고 heading 이 550 이고 boldLead 가 600", pass: (m) => { const w = m.weights; return w.body === 400 && w.headline === 400 && w.cardTitle === 400 && w.heading === 550 && w.boldLead === 600; }, show: (m) => { const w = m.weights; return `본문 ${w.body}, 결론 ${w.headline}, 카드 제목 ${w.cardTitle}, 소제목 ${w.heading}, 굵은 글씨 ${w.boldLead}`; } },
+	{ name: "모바일 화면 너비", rule: "mobile.samples 의 모든 항목에서 overflowPx 가 0 이하", pass: (m) => m.mobile.samples.every((s) => s.overflowPx <= 0), show: (m) => m.mobile.samples.map((s) => `${s.width}x${s.height} ${s.view}: ${s.overflowPx}px`).join(", ") },
+	{ name: "모바일 터치와 입력 글자", rule: "mobile.minNavHeightPx 가 44 이상이고 mobile.inputFontPx 가 16 이상", pass: (m) => m.mobile.minNavHeightPx >= 44 && m.mobile.inputFontPx >= 16, show: (m) => `${m.mobile.minNavHeightPx}px, 입력 ${m.mobile.inputFontPx}px` },
+	{ name: "모바일 키보드 높이", rule: "mobile.keyboard 에서 composerTop 이 0 이상, composerBottom 이 viewportHeight 이하, composerLeft 가 0 이상, composerRight 가 viewportWidth 이하", pass: (m) => { const k = m.mobile.keyboard; return k.composerTop >= 0 && k.composerBottom <= k.viewportHeight && k.composerLeft >= 0 && k.composerRight <= k.viewportWidth; }, show: (m) => JSON.stringify(m.mobile.keyboard) },
 ];
 
 /** 페이지 안에서 실행된다. renderAnswer 와 같은 구조의 표본 답을 그려 재고, 입력창 버튼 정렬도 잰다. */
@@ -180,7 +183,25 @@ async function main() {
 			await until(() => tab.evaluate(`!!document.querySelector("#sessionThreadBtn") && !document.querySelector("#sessionThreadBtn").closest("[hidden]")`), "세션 열기");
 			await tab.evaluate(`document.querySelector("#sessionThreadBtn").click()`);
 			await until(() => tab.evaluate(`!document.querySelector("#q").disabled && !document.querySelector("#chatBody").closest("[hidden]")`), "대화 입력창");
-			return await tab.evaluate(`(${pageMeasure.toString()})()`);
+			const metrics = await tab.evaluate(`(${pageMeasure.toString()})()`);
+			await tab.send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
+			metrics.mobile = { samples: [] };
+			for (const [width, height] of [[320, 568], [390, 844], [390, 420]]) {
+				await tab.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false });
+				await delay(150);
+				for (const view of ["sessions", "work", "chat"]) {
+					await tab.evaluate(`document.querySelector('#mobileNav [data-view="${view}"]').click()`);
+					const sample = await tab.evaluate(`({ width: innerWidth, height: innerHeight, view: document.body.dataset.mobileView, overflowPx: document.documentElement.scrollWidth - innerWidth })`);
+					metrics.mobile.samples.push(sample);
+				}
+				if (height === 420) Object.assign(metrics.mobile, await tab.evaluate(`(() => {
+					const input = document.querySelector("#q");
+					input.value = "모바일 여러 줄 질문\\n둘째 줄\\n셋째 줄"; input.dispatchEvent(new Event("input", { bubbles: true }));
+					const box = document.querySelector("#form").getBoundingClientRect();
+					return { minNavHeightPx: Math.min(...[...document.querySelectorAll("#mobileNav button")].map(b => b.getBoundingClientRect().height)), inputFontPx: parseFloat(getComputedStyle(input).fontSize), keyboard: { viewportWidth: innerWidth, viewportHeight: innerHeight, composerTop: box.top, composerBottom: box.bottom, composerLeft: box.left, composerRight: box.right } };
+				})()`));
+			}
+			return metrics;
 		} finally {
 			tab.close();
 		}

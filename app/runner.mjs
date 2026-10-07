@@ -5,9 +5,6 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { httpError } from "./learning.mjs";
 
-/** 설명 깊이 → thinking 수준. 분류·용어 추출은 "off". */
-export const THINKING = { EASY: "low", NORMAL: "low", HARD: "medium" };
-
 const ISOLATION = "memory:\n  backend: off\nautolearn:\n  enabled: false\n";
 const ISOLATION_FLAGS = ["--no-session", "--no-title", "--no-extensions", "--no-skills", "--no-rules", "--no-lsp"];
 const FAILED = "요청 내용과 비밀값 보호를 위해 원시 실행 로그는 저장하지 않아요.";
@@ -34,6 +31,23 @@ export async function createRunner({ bin, tmpRoot, timeoutMs }) {
 	await writeFile(isolation, ISOLATION);
 	const base = ["--config", isolation, ...ISOLATION_FLAGS];
 	const env = { ...process.env, TERM: "dumb" };
+	const children = new Set();
+	let closed = false;
+	function launch(args) {
+		if (closed) throw new CancelledError();
+		const child = spawn(bin, args, { env, stdio: ["pipe", "pipe", "ignore"] });
+		children.add(child);
+		child.once("close", () => children.delete(child));
+		return child;
+	}
+	async function close() {
+		closed = true;
+		await Promise.all([...children].map((child) => new Promise((resolve) => {
+			const timer = setTimeout(() => child.kill("SIGKILL"), 2000);
+			child.once("close", () => { clearTimeout(timer); resolve(); });
+			child.kill("SIGTERM");
+		})));
+	}
 
 	/**
 	 * 한 번 묻고 끝나는 호출(학습 분류·용어 추출). 도구 없음.
@@ -42,7 +56,7 @@ export async function createRunner({ bin, tmpRoot, timeoutMs }) {
 	function once({ system, task, input = "", model = null, thinking = "off", signal }) {
 		return new Promise((res, rej) => {
 			if (signal?.aborted) return rej(new CancelledError());
-			const child = spawn(bin, ["-p", ...base, "--no-tools", "--thinking", thinking, "--system-prompt", system, ...modelFlags(model), task], { env, stdio: ["pipe", "pipe", "ignore"] });
+			const child = launch(["-p", ...base, "--no-tools", "--thinking", thinking, "--system-prompt", system, ...modelFlags(model), task]);
 			let stdout = "";
 			let settled = false;
 			const finish = (error, value) => {
@@ -84,7 +98,7 @@ export async function createRunner({ bin, tmpRoot, timeoutMs }) {
 	 * 한 번에 한 질문만 처리한다. 호출자가 순서를 보장한다.
 	 */
 	function conversation({ system, model = null }) {
-		const child = spawn(bin, ["--mode", "rpc", ...base, "--tools", "read", "--system-prompt", system, ...modelFlags(model)], { env, stdio: ["pipe", "pipe", "ignore"] });
+		const child = launch(["--mode", "rpc", ...base, "--tools", "read", "--system-prompt", system, ...modelFlags(model)]);
 		let buffer = "";
 		let ready;
 		let exited = false;
@@ -241,5 +255,5 @@ export async function createRunner({ bin, tmpRoot, timeoutMs }) {
 		};
 	}
 
-	return { once, conversation };
+	return { once, conversation, close };
 }

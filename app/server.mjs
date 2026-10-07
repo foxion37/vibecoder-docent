@@ -23,7 +23,8 @@ import { extractCitations, prepareEvidence, resolveEvidence } from "./evidence.m
 import { modelCatalog, selectedModel } from "./models.mjs";
 import { DOMAINS_PROMPT, PLANNING_PROMPT, applyClassification, beginRequest, completeAnswer, createProfile, explanationHints, feedback, httpError, learningItems, parseDomains, parsePlan, planningContext, planningInput, profile, profiles, requestKey, requestSignature, resolveDifficulty, settleRequest, sourceScope, storedRequest, updateProfile } from "./learning.mjs";
 import { displayOf, parseCards, parseFocus, questionContext, recentDialogue, steerMessage, threadKey, threadRecords } from "./dialogue.mjs";
-import { CancelledError, THINKING, createRunner } from "./runner.mjs";
+import { CancelledError, createRunner } from "./runner.mjs";
+import { THINKING } from "./depth.mjs";
 import { conversationPool } from "./conversation.mjs";
 import { jobRegistry } from "./jobs.mjs";
 import { prefetchHub } from "./prefetch.mjs";
@@ -36,6 +37,13 @@ const STATIC_ASSETS = new Map([
 	["/assets/docent-markdown.css", ["assets/docent-markdown.css", "text/css; charset=utf-8"]],
 	["/assets/PretendardVariable.woff2", ["assets/PretendardVariable.woff2", "font/woff2", "public, max-age=604800"]],
 	["/assets/Pretendard-LICENSE.txt", ["assets/Pretendard-LICENSE.txt", "text/plain; charset=utf-8"]],
+	["/mobile.css", ["mobile.css", "text/css; charset=utf-8"]],
+	["/mobile.mjs", ["mobile.mjs", "text/javascript; charset=utf-8"]],
+	["/manifest.webmanifest", ["manifest.webmanifest", "application/manifest+json; charset=utf-8"]],
+	["/sw.js", ["sw.js", "text/javascript; charset=utf-8"]],
+	["/offline.html", ["offline.html", "text/html; charset=utf-8"]],
+	["/app-icon-192.png", ["assets/app-icon-192.png", "image/png"]],
+	["/app-icon-512.png", ["assets/app-icon-512.png", "image/png"]],
 ]);
 const PROMPT = resolve(ROOT, "../prompt/docent.md");
 const CONFIG = await config();
@@ -454,7 +462,7 @@ async function respondAsk(req, res, input) {
 	const failure = (error) => ({ type: error.cancelled ? "cancelled" : "error", ...(error.cancelled ? {} : { status: error.status ?? 500, error: String(error.message ?? error) }) });
 	if (!opened.subscribe) {
 		if (stream) {
-			res.writeHead(200, { "content-type": `${NDJSON}; charset=utf-8`, "cache-control": "no-cache" });
+			res.writeHead(200, { "content-type": `${NDJSON}; charset=utf-8`, "cache-control": "no-store" });
 			return res.end(`${JSON.stringify(opened.answer ? { type: "answer", answer: opened.answer } : failure(opened.error))}\n`);
 		}
 		if (opened.answer) return json(res, 200, opened.answer);
@@ -467,7 +475,7 @@ async function respondAsk(req, res, input) {
 			return json(res, error.status ?? 500, { error: String(error.message ?? error), ...(error.cancelled ? { cancelled: true } : {}) });
 		}
 	}
-	res.writeHead(200, { "content-type": `${NDJSON}; charset=utf-8`, "cache-control": "no-cache", "x-content-type-options": "nosniff" });
+	res.writeHead(200, { "content-type": `${NDJSON}; charset=utf-8`, "cache-control": "no-store", "x-content-type-options": "nosniff" });
 	// 연결이 끊겨도 작업은 계속한다. 같은 요청으로 다시 붙을 수 있다.
 	const stop = opened.subscribe((line) => {
 		if (res.writableEnded) return;
@@ -500,7 +508,10 @@ async function evidenceFor(sessionId, ref, profileId) {
 
 const handler = async (req, res) => {
 	const url = new URL(req.url, "http://localhost");
+	// Personal records must never enter browser/proxy caches, including PWA use.
+	if (url.pathname.startsWith("/api/")) res.setHeader("cache-control", "no-store");
 	try {
+		if (req.method === "GET" && url.pathname === "/api/health") return json(res, 200, { app: "vibecoder-docent", version: VERSION });
 		if (req.method === "GET" && url.pathname === "/") {
 			res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" });
 			// 화면의 버전 표시 칸을 package.json 버전으로 채운다.
@@ -585,7 +596,7 @@ const handler = async (req, res) => {
 			const profileId = url.searchParams.get("profileId");
 			const p = providerOf(id);
 			if (profileId) await profile(profileId);
-			res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" });
+			res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-store", connection: "keep-alive" });
 			res.write(`: jev=${jevEnabled}\n\n`);
 			const send = (ev) => res.write(`data: ${JSON.stringify(ev)}\n\n`);
 			// 프로필 없이 여는 구독(다른 컴퓨터의 docent)은 미리 설명을 예약하지 않는다.
@@ -707,3 +718,17 @@ if (HOST_INPUT === "tailscale" && HOST !== "127.0.0.1") {
 } else if (CONFIG.tailscale === true) {
 	openTailscaleListener().catch((error) => console.error(`docent: 테일스케일 공유를 열지 못했어요 (${error.message})`));
 }
+
+// 앱이 소유한 서버를 종료할 때 설명과 뒤늦은 학습 분류 프로세스도 함께 끝낸다.
+let stopping = false;
+async function shutdown() {
+	if (stopping) return;
+	stopping = true;
+	for (const server of listeners.values()) server.close();
+	const active = jobs.list(() => true);
+	for (const job of active) job.cancel();
+	await Promise.allSettled([runner.close(), ...active.map((job) => job.done)]);
+	process.exit(0);
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
